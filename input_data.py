@@ -52,14 +52,22 @@ class InputData:
 
     def init_sample_table(self):
         self.sample_table = []
+
+        # 为什么搞这么大呢
         sample_table_size = 1e8
+
+        # numpy shape[vocab_size,]
+        # freq ** 0.75
         pow_frequency = numpy.array(list(self.word_frequency.values()))**0.75
-        words_pow = sum(pow_frequency)
-        ratio = pow_frequency / words_pow
+        words_pow_sum = sum(pow_frequency)
+
+        # 归一化
+        ratio = pow_frequency / words_pow_sum
         count = numpy.round(ratio * sample_table_size)
         for wid, c in enumerate(count):
             self.sample_table += [wid] * int(c)
         self.sample_table = numpy.array(self.sample_table)
+
 
     # @profile
     def get_batch_pairs(self, batch_size, window_size):
