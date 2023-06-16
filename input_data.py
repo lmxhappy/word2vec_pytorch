@@ -1,5 +1,6 @@
 import numpy
 from collections import deque
+
 numpy.random.seed(12345)
 
 
@@ -19,6 +20,9 @@ class InputData:
         self.get_words(min_count)
         self.word_pair_catch = deque()
         self.init_sample_table()
+
+        self.word_prob = self.get_word_prob()
+
         print('Word Count: %d' % len(self.word2id))
         print('Sentence Length: %d' % (self.sentence_length))
 
@@ -56,18 +60,23 @@ class InputData:
         # 为什么搞这么大呢
         sample_table_size = 1e8
 
-        # numpy shape[vocab_size,]
-        # freq ** 0.75
-        pow_frequency = numpy.array(list(self.word_frequency.values()))**0.75
-        words_pow_sum = sum(pow_frequency)
+        ratio = self.get_word_prob()
 
-        # 归一化
-        ratio = pow_frequency / words_pow_sum
         count = numpy.round(ratio * sample_table_size)
         for wid, c in enumerate(count):
             self.sample_table += [wid] * int(c)
         self.sample_table = numpy.array(self.sample_table)
 
+    def get_word_prob(self):
+        # numpy shape[vocab_size,]
+        # freq ** 0.75
+        pow_frequency = numpy.array(list(self.word_frequency.values())) ** 0.75
+        words_pow_sum = sum(pow_frequency)
+
+        # 归一化
+        ratio = pow_frequency / words_pow_sum
+
+        return ratio
 
     # @profile
     def get_batch_pairs(self, batch_size, window_size):
@@ -101,13 +110,19 @@ class InputData:
             self.sample_table, size=(len(pos_word_pair), count)).tolist()
         return neg_v
 
+    def get_neg_v_neg_sampling_v2(self, pos_word_pair, count):
+        neg_v = numpy.random.choice(
+            range(self.word_count), size=(len(pos_word_pair), count), p=self.word_prob).tolist()
+
+        return neg_v
+
     def evaluate_pair_count(self, window_size):
         return self.sentence_length * (2 * window_size - 1) - (
-            self.sentence_count - 1) * (1 + window_size) * window_size
+                self.sentence_count - 1) * (1 + window_size) * window_size
 
 
 def test():
-    a = InputData('./zhihu.txt')
+    a = InputData('zhihu.txt')
 
 
 if __name__ == '__main__':

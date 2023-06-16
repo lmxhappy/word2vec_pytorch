@@ -63,7 +63,9 @@ class Word2Vec:
         for i in process_bar:
             pos_pairs = self.data.get_batch_pairs(self.batch_size,
                                                   self.window_size)
-            neg_v = self.data.get_neg_v_neg_sampling(pos_pairs, 5)
+            # neg_v = self.data.get_neg_v_neg_sampling(pos_pairs, 5)
+            neg_v = self.data.get_neg_v_neg_sampling_v2(pos_pairs, 5)
+
             pos_u = [pair[0] for pair in pos_pairs]
             pos_v = [pair[1] for pair in pos_pairs]
 
